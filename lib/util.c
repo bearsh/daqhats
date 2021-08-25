@@ -22,6 +22,10 @@
 
 #include "gpiodef.h"
 
+#ifndef GENERIC_HAT
+#define RPI_DT_HAT
+#endif
+
 // *****************************************************************************
 // Constants
 
@@ -108,8 +112,10 @@ static const char* const BOARD_LOCKFILES[] =
 };
 
 static const char* const HAT_SETTINGS_DIR = "/etc/mcc/hats";
-static const char* const SYS_HAT_DIR = "/proc/device-tree/hat";
 static const char* const VENDOR_NAME = "Measurement Computing Corp.";
+#ifdef RPI_DT_HAT
+static const char* const SYS_HAT_DIR = "/proc/device-tree/hat";
+#endif
 
 static const char* UNDEFINED_ERROR_MESSAGE =
     "An unknown error occurred.";
@@ -450,17 +456,19 @@ int hat_list(uint16_t filter_id, struct HatInfo* pList)
     //struct HatInfo* entry;
     uint8_t address;
     char filename[256];
-    char temp[256];
-    char* ptr;
     int eeprom_fd;
     uint8_t count;
     struct _Header header;
     struct _Atom atom;
     struct _VendorInfo vinf;
-    uint16_t id;
-    uint16_t pver;
 
     count = 0;
+
+#ifdef RPI_DT_HAT
+    char temp[256];
+    char* ptr;
+    uint16_t id;
+    uint16_t pver;
 
     // EEPROM 0 will always use the built-in OS support to prevent caching info
     // for a single board that is swapped out (such as during manufacturing
@@ -519,9 +527,15 @@ int hat_list(uint16_t filter_id, struct HatInfo* pList)
     if (eeprom_fd != -1)
         close(eeprom_fd);
 
-    // Boards 1-7 will be supported with the read_eeproms utility that copies
+    // see below, start at 1 for rpi
+    address = 1;
+#else
+    // without rpi hat support, start at 0
+    address = 0;
+#endif
+    // Boards 0/1-7 will be supported with the read_eeproms utility that copies
     // the EEPROM contents to /etc/mcc/hats
-    for (address = 1; address < MAX_NUMBER_HATS; address++)
+    for (; address < MAX_NUMBER_HATS; address++)
     {
         // look for HAT eeprom.bin files in /etc/mcc/hats
         sprintf(filename, "%s/eeprom_%d.bin", HAT_SETTINGS_DIR, address);
@@ -620,14 +634,12 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
     bool found_vendor;
     bool error;
     char filename[256];
-    char temp[256];
     uint8_t atom_num;
     uint16_t custom_size;
     int eeprom_fd;
     struct _Header header;
     struct _Atom atom;
     struct _VendorInfo vinf;
-    struct stat filestat;
 
     if (address >= MAX_NUMBER_HATS)
     {
@@ -635,6 +647,10 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
     }
 
     found_vendor = false;
+
+#ifdef RPI_DT_HAT
+    char temp[256];
+    struct stat filestat;
 
     if (address == 0)
     {
@@ -713,6 +729,7 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
         if (eeprom_fd != -1)
             close(eeprom_fd);
     }
+#endif
 
     if (!found_vendor)
     {
