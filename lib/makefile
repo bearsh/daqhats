@@ -6,14 +6,22 @@ VERSION = $(MAJOR).$(MINOR).$(SUB)
 INSTALL_DIR = /usr/local/lib
 BUILD_DIR = ./build
 
-CC = gcc
-CFLAGS = -I../include -I/opt/vc/include -I/usr/include -fPIC -Wall -Wextra -g -O2 -DENABLE_LOCALES=Off
-LDFLAGS = -L/opt/vc/lib -zdefs -shared -pthread -Wl,-soname,lib$(NAME).so.$(MAJOR)
+ifdef GPIOD
+CFLAGS = -I../include -fPIC -Wall -Wextra -g -O2 -DENABLE_LOCALES=Off -DUSE_LIBGPIOD $(EXTRA_CFLAGS)
+LDFLAGS = -shared -pthread -Wl,-soname,lib$(NAME).so.$(MAJOR)
+GPIO_C = gpio-libgpiod.c
+DEPLIBS = -lm -lgpiod
+else
+CFLAGS = -I../include -I/opt/vc/include -fPIC -Wall -Wextra -g -O2 -DENABLE_LOCALES=Off $(EXTRA_CFLAGS)
+LDFLAGS = -L/opt/vc/lib -shared -pthread -Wl,-soname,lib$(NAME).so.$(MAJOR)
+GPIO_C = gpio.c
 DEPLIBS = -lm -lbcm_host
+endif
+
 RM = rm -f
 TARGET_LIB = lib$(NAME).so.$(VERSION)
 
-SRCS = util.c mcc118.c mcc152.c mcc152_dac.c mcc152_dio.c gpio.c cJSON.c mcc134.c mcc134_adc.c nist.c mcc172.c mcc128.c
+SRCS = util.c mcc118.c mcc152.c mcc152_dac.c mcc152_dio.c $(GPIO_C) cJSON.c mcc134.c mcc134_adc.c nist.c mcc172.c mcc128.c
 OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
 DEPS = $(OBJS:%.o=%.d)
 
