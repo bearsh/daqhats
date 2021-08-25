@@ -22,6 +22,8 @@
 #include "cJSON.h"
 #include "gpio.h"
 
+#include "gpiodef.h"
+
 // *****************************************************************************
 // Constants
 #define MAX_CODE                (8388607L)
@@ -53,9 +55,6 @@ struct MCC172DeviceInfo mcc172_device_info =
     RANGE_MAX
 };
 
-// GPIO signals for the MCC 172
-#define RESET_GPIO              16
-#define IRQ_GPIO                20
 
 // MCC 172 command codes
 #define CMD_AINSCANSTART        0x11

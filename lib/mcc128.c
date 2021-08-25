@@ -22,6 +22,8 @@
 #include "cJSON.h"
 #include "gpio.h"
 
+#include "gpiodef.h"
+
 // *****************************************************************************
 // Constants
 
@@ -103,10 +105,6 @@ struct MCC128DeviceInfo mcc128_device_info =
 
 // Delay / timeout constants
 #define SEND_RETRY_TIME         10*MSEC     // 10 milliseconds
-
-// GPIO signals for the MCC 128
-#define RESET_GPIO              16
-#define IRQ_GPIO                20
 
 // MCC 128 command codes
 #define CMD_AIN                 0x10

@@ -20,6 +20,8 @@
 #include "util.h"
 #include "gpio.h"
 
+#include "gpiodef.h"
+
 // *****************************************************************************
 // Constants
 
@@ -54,12 +56,6 @@
 #define SIGNATURE       0x69502D52  // "R-Pi" in ASCII
 #define FORMAT_VERSION  0x01
 
-// Board address GPIO pin numbers
-#define ADDR0_GPIO              12
-#define ADDR1_GPIO              13
-#define ADDR2_GPIO              26
-
-#define IRQ_GPIO                21
 
 // EEPROM header structure
 struct _Header
@@ -876,7 +872,7 @@ const char* hat_error_message(int result)
  *****************************************************************************/
 int hat_interrupt_state(void)
 {
-    if (gpio_status(IRQ_GPIO) == 0)
+    if (gpio_status(IRQ_IOEXP_GPIO) == 0)
     {
         return 1;
     }
@@ -891,8 +887,8 @@ int hat_interrupt_state(void)
  *****************************************************************************/
 int hat_wait_for_interrupt(int timeout)
 {
-    // wait for IRQ_GPIO to go low, with timeout
-    switch (gpio_wait_for_low(IRQ_GPIO, timeout))
+    // wait for IRQ_IOEXP_GPIO to go low, with timeout
+    switch (gpio_wait_for_low(IRQ_IOEXP_GPIO, timeout))
     {
     case -1:    // error
         return RESULT_UNDEFINED;
@@ -908,7 +904,7 @@ int hat_wait_for_interrupt(int timeout)
  *****************************************************************************/
 int hat_interrupt_callback_enable(void (*function)(void*), void* data)
 {
-    switch (gpio_interrupt_callback(IRQ_GPIO, 0, function, data))
+    switch (gpio_interrupt_callback(IRQ_IOEXP_GPIO, 0, function, data))
     {
     case -1:    // error
         return RESULT_UNDEFINED;
@@ -923,7 +919,7 @@ int hat_interrupt_callback_enable(void (*function)(void*), void* data)
  *****************************************************************************/
 int hat_interrupt_callback_disable(void)
 {
-    switch (gpio_interrupt_callback(IRQ_GPIO, 3, NULL, NULL))
+    switch (gpio_interrupt_callback(IRQ_IOEXP_GPIO, 3, NULL, NULL))
     {
     case -1:    // error
         return RESULT_UNDEFINED;
