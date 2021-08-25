@@ -115,7 +115,7 @@ static const char* const HAT_SETTINGS_DIR = "/etc/mcc/hats";
 static const char* const SYS_HAT_DIR = "/proc/device-tree/hat";
 static const char* const VENDOR_NAME = "Measurement Computing Corp.";
 
-static const char* UNDEFINED_ERROR_MESSAGE = 
+static const char* UNDEFINED_ERROR_MESSAGE =
     "An unknown error occurred.";
 
 static const char* HAT_ERROR_MESSAGES[] =
@@ -160,7 +160,7 @@ void _lock_init(void)
 {
     mode_t mask;
     int i;
-    
+
     // set umask so we can set permission to 0666; otherwise, if run as root it
     // will leave lockfiles that normal users cannot open
     mask = umask(0111);
@@ -179,11 +179,11 @@ void _lock_init(void)
 
     // revert umask
     umask(mask);
-    
+
     // Multiple threads in the same process will share the above file
     // descriptor, so flock() will not work. Use a mutex for this scenario.
     pthread_mutex_init(&spi_mutex, NULL);
-    
+
     for (i = 0; i < MAX_NUMBER_HATS; i++)
     {
         pthread_mutex_init(&board_mutex[i], NULL);
@@ -193,10 +193,10 @@ void _lock_init(void)
 void _lock_fini(void)
 {
     int i;
-    
+
     close(spi_lockfile);
     pthread_mutex_destroy(&spi_mutex);
-    
+
     for (i = 0; i < MAX_NUMBER_HATS; i++)
     {
         pthread_mutex_destroy(&board_mutex[i]);
@@ -211,7 +211,7 @@ void __attribute__ ((constructor)) init(void)
 {
     // initialization
     _address_init();
-    
+
     _lock_init();
 }
 
@@ -236,7 +236,7 @@ void _set_address(uint8_t address)
 }
 
 /******************************************************************************
-  Returns the absolute difference in microseconds between two struct timeval 
+  Returns the absolute difference in microseconds between two struct timeval
   values.
  *****************************************************************************/
 uint32_t _difftime_us(struct timespec* start, struct timespec* end)
@@ -246,7 +246,7 @@ uint32_t _difftime_us(struct timespec* start, struct timespec* end)
     if (!start || !end)
         return 0;
 
-    diff = (end->tv_sec*1e6 + end->tv_nsec/1000) - (start->tv_sec*1e6 + 
+    diff = (end->tv_sec*1e6 + end->tv_nsec/1000) - (start->tv_sec*1e6 +
         start->tv_nsec/1000);
     if (diff < 0)
         return (uint32_t)-diff;
@@ -262,7 +262,7 @@ uint32_t _difftime_ms(struct timespec* start, struct timespec* end)
     if (!start || !end)
         return 0;
 
-    diff = (end->tv_sec*1e3 + end->tv_nsec/1e6) - (start->tv_sec*1e3 + 
+    diff = (end->tv_sec*1e3 + end->tv_nsec/1e6) - (start->tv_sec*1e3 +
         start->tv_nsec/1e6);
     if (diff < 0)
         return (uint32_t)-diff;
@@ -281,7 +281,7 @@ uint32_t _difftime_ms(struct timespec* start, struct timespec* end)
   where the semaphore could be stuck at 0 if a process receives
   SIGKILL before incrementing the semaphore.  If the process dies the
   file handle is automatically released.
- 
+
   The flock() mechanism does not work for multiple threads within the same
   process - the same file descriptor is shared among all the threads so once one
   of them has a lock then flock() will return successfully for any other thread
@@ -301,7 +301,7 @@ int _obtain_lock(void)
     // Time out after 5 seconds
     locked = false;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
-    
+
     do
     {
         // the file was opened, now lock it so no other process can open it
@@ -323,7 +323,7 @@ int _obtain_lock(void)
         // could not get a lock within 5 seconds, report as a timeout
         return RESULT_TIMEOUT;
     }
-    
+
     // file locking will not work for multiple threads in the same process, so
     // use a mutex as well
     pthread_mutex_lock(&spi_mutex);
@@ -332,8 +332,8 @@ int _obtain_lock(void)
 }
 
 /******************************************************************************
-  Use lock files to control access to the HAT boards by multiple processes. 
-  
+  Use lock files to control access to the HAT boards by multiple processes.
+
   Not used by all board types, just when there is a lengthy process involving
   a board resource that cannot be interrupted. For example, setting up an
   MCC 134 ADC conversion then waiting for the results (~50ms); use a lock to
@@ -344,7 +344,7 @@ int _obtain_lock(void)
   of them has a lock then flock() will return successfully for any other thread
   that requests the lock.  We use a pthread_mutex to control cross-thread
   locking.
-  
+
   Return: int status
  *****************************************************************************/
 int _obtain_board_lock(uint8_t address)
@@ -417,7 +417,7 @@ int _obtain_board_lock(uint8_t address)
     }
 
     board_lockfiles[address] = lock_fd;
-    
+
     // file locking will not work for multiple threads in the same process, so
     // use a mutex as well
     pthread_mutex_lock(&board_mutex[address]);
@@ -523,7 +523,7 @@ int hat_list(uint16_t filter_id, struct HatInfo* pList)
     if (eeprom_fd != -1)
         close(eeprom_fd);
 
-    // Boards 1-7 will be supported with the read_eeproms utility that copies 
+    // Boards 1-7 will be supported with the read_eeproms utility that copies
     // the EEPROM contents to /etc/mcc/hats
     for (address = 1; address < MAX_NUMBER_HATS; address++)
     {
@@ -617,7 +617,7 @@ int hat_list(uint16_t filter_id, struct HatInfo* pList)
 /******************************************************************************
   Return factory data for a specific HAT board as a jSON string.
  *****************************************************************************/
-int _hat_info(uint8_t address, struct HatInfo* entry, char* pData, 
+int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
     uint16_t* pSize)
 {
     bool found_custom;
@@ -737,7 +737,7 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
                 (atom_num < header.numatoms) &&
                 !error)
             {
-                if (read(eeprom_fd, &atom, ATOM_SIZE-CRC_SIZE) == 
+                if (read(eeprom_fd, &atom, ATOM_SIZE-CRC_SIZE) ==
                     ATOM_SIZE-CRC_SIZE)
                 {
                     // process the atom by type
@@ -748,7 +748,7 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
                         {
                             vinf.vstr = (char*)malloc(vinf.vslen+1);
                             vinf.pstr = (char*)malloc(vinf.pslen+1);
-                            if (read(eeprom_fd, vinf.vstr, vinf.vslen) != 
+                            if (read(eeprom_fd, vinf.vstr, vinf.vslen) !=
                                 vinf.vslen)
                             {
                                 free(vinf.vstr);
@@ -757,7 +757,7 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
                                 continue;
                             }
                             vinf.vstr[vinf.vslen] = '\0';
-                            if (read(eeprom_fd, vinf.pstr, vinf.pslen) != 
+                            if (read(eeprom_fd, vinf.pstr, vinf.pslen) !=
                                 vinf.pslen)
                             {
                                 free(vinf.vstr);
@@ -776,7 +776,7 @@ int _hat_info(uint8_t address, struct HatInfo* entry, char* pData,
                                     entry->address = address;
                                     entry->id = vinf.pid;
                                     entry->version = vinf.pver;
-                                    strncpy(entry->product_name, vinf.pstr, 
+                                    strncpy(entry->product_name, vinf.pstr,
                                         256-1);
                                 }
                                 found_vendor = true;
