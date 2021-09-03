@@ -1,0 +1,4 @@
+[submodule "eeprog"]
+	path = eeprog
+	url = https://github.com/bearsh/eeprog.git
+	branch = libi2c
