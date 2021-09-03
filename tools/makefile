@@ -10,6 +10,12 @@ INSTALL_DIR = /usr/local/bin
 SHORTCUT_DIR = /usr/share/applications
 APPS_DIR = /usr/share/mcc/daqhats
 
+ifdef USE_EEPROG
+DAQHATS_READ_EEPROMS=daqhats_read_eeproms.eeprog
+else
+DAQHATS_READ_EEPROMS=daqhats_read_eeproms
+endif
+
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
@@ -37,7 +43,7 @@ install:
 	@install mcc172_firmware_update $(INSTALL_DIR)
 	@install mcc128_firmware_update $(INSTALL_DIR)
 	@install mcc118_firmware_update $(INSTALL_DIR)
-	@install daqhats_read_eeproms $(INSTALL_DIR)
+	@install $(DAQHATS_READ_EEPROMS) $(INSTALL_DIR)/daqhats_read_eeproms
 	@install daqhats_list_boards $(INSTALL_DIR)
 	@install daqhats_version $(INSTALL_DIR)
 	@install daqhats_check_152 $(INSTALL_DIR)
