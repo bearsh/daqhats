@@ -97,11 +97,13 @@ void gpio_dir(int chip, int pin, int dir)
         if (dir == 0) {
             // Set pin to output.
             PRINT("gpio_dir: %u:%u out\n", chip, pin);
-            gpiod_line_set_direction_output(line, 0);
+            //gpiod_line_set_direction_output(line, 0);
+            gpiod_line_request_output(line, "daqhats", 0);
         } else {
             // Set pin to input.
             PRINT("gpio_dir: %u:%u in\n", chip, pin);
-            gpiod_line_set_direction_input(line);
+            //gpiod_line_set_direction_input(line);
+            gpiod_line_request_input(line, "daqhats");
         }
     }
 }
