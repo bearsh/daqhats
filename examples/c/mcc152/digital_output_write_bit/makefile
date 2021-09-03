@@ -1,8 +1,7 @@
 NAME = digital_output_write_bit
 OBJ = $(NAME).o
-LIBS = -ldaqhats
+LIBS = -ldaqhats -lgpiod -lm
 CFLAGS = -Wall -I/usr/local/include -g
-CC = gcc
 EXTENSION = .c
 
 all: $(NAME)

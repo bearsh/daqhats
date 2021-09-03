@@ -1,8 +1,7 @@
 NAME = finite_scan
 OBJ = $(NAME).o
-LIBS = -ldaqhats
+LIBS = -ldaqhats -lgpiod -lm
 CFLAGS = -Wall -I/usr/local/include -g
-CC = gcc
 EXTENSION = .c
 
 all: $(NAME)

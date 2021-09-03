@@ -1,8 +1,7 @@
 NAME = analog_output_write
 OBJ = $(NAME).o
-LIBS = -ldaqhats -lm
+LIBS = -ldaqhats -lgpiod -lm
 CFLAGS = -Wall -I/usr/local/include -I./ -g
-CC = gcc
 EXTENSION = .c
 
 all: $(NAME)

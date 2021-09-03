@@ -1,8 +1,7 @@
-CC = gcc
 INCLUDE_DIR = ../include
 LIB_DIR = ../lib
-CFLAGS = -I$(INCLUDE_DIR) -I$(LIB_DIR) -g
-OFLAGS = -ldaqhats
+CFLAGS = -I$(INCLUDE_DIR) -I$(LIB_DIR) -I/usr/local/include -g
+OFLAGS = -ldaqhats -lgpiod -lm
 DEPS = $(INCLUDE_DIR)/mcc118.h $(INCLUDE_DIR)/daqhats.h $(LIB_DIR)/mcc118_update.h \
 	$(INCLUDE_DIR)/mcc172.h $(INCLUDE_DIR)/mcc128.h $(LIB_DIR)/mcc172_update.h \
 	$(LIB_DIR)/mcc128_update.h
