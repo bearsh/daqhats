@@ -23,6 +23,12 @@
 
 #define ms_to_timespec(ms)  (struct timespec){ .tv_sec = ms/1000, .tv_nsec = (ms%1000)*1000000 }
 
+#ifdef DEBUG
+#define PRINT(...)          printf(__VA_ARGS__)
+#else
+#define PRINT(...)
+#endif
+
 struct chip_data {
     struct gpiod_chip *chip;
     pthread_t *line_threads;
@@ -42,6 +48,7 @@ static void alloc_chip_data(void)
     }
     nb_of_chips = (int)g.gl_pathc;
     chip_data = calloc(sizeof(struct chip_data), nb_of_chips);
+    PRINT("construct: #%u\n", nb_of_chips);
 }
 
 
@@ -52,6 +59,7 @@ static struct gpiod_line* get_line(int chip, int pin)
     }
     if (chip >= nb_of_chips) {
         // TODO: should we realloc chip_data?
+        PRINT("get_line: error number\n");
         return NULL;
     }
     if (chip_data[chip].chip) {
@@ -59,9 +67,11 @@ static struct gpiod_line* get_line(int chip, int pin)
     }
     struct gpiod_chip* c = gpiod_chip_open_by_number(chip);
     if (!c) {
+        PRINT("get_line: error open\n");
         return NULL;
     }
     chip_data[chip].chip = c;
+    PRINT("get_line: %u:%u\n", chip, pin);
     return gpiod_chip_get_line(c, pin);
 }
 
@@ -86,9 +96,11 @@ void gpio_dir(int chip, int pin, int dir)
     if (line) {
         if (dir == 0) {
             // Set pin to output.
+            PRINT("gpio_dir: %u:%u out\n", chip, pin);
             gpiod_line_set_direction_output(line, 0);
         } else {
             // Set pin to input.
+            PRINT("gpio_dir: %u:%u in\n", chip, pin);
             gpiod_line_set_direction_input(line);
         }
     }
@@ -99,6 +111,7 @@ void gpio_write(int chip, int pin, int val)
     struct gpiod_line* line = get_line(chip, pin);
 
     if (line) {
+        PRINT("gpio_write: %u:%u %s\n", chip, pin, val ? "high" : "low");
         gpiod_line_set_value(line, val ? 1 : 0);
     }
 }
@@ -108,7 +121,9 @@ int gpio_status(int chip, int pin)
     struct gpiod_line* line = get_line(chip, pin);
 
     if (line) {
-        return gpiod_line_get_value(line);
+        int val = gpiod_line_get_value(line);
+        PRINT("gpio_status: %u:%u %s\n", chip, pin, val ? "high" : "low");
+        return val;
     }
     return -1;
 }
