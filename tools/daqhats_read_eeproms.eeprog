@@ -4,49 +4,67 @@ eeprog="eeprog"
 i2c_dev="$(ls /dev/i2c-* | head -n 1)"
 hats_dir="/etc/mcc/hats"
 
-if [ $# -ge 1 ]; then
-   if [ "$1" = "-h" ]; then
-      echo "Usage: daqhats_read_eeproms [I2C-device]"
-      echo "Note: This script must be run as root"
-      exit 0
-   fi
-   i2c_dev="$1"
-fi
+force=0
+
+while [ $# -ge 1 ]; do
+	case $1 in
+	-h|--help)
+		echo "Usage: daqhats_read_eeproms [I2C-device]"
+		echo "Note: This script must be run as root"
+		exit 0
+		;;
+	-f|--force)
+		force=1
+		shift
+		;;
+	*)
+		i2c_dev=$1
+		shift
+		;;
+	esac
+done
 
 if [ ! $(which ${eeprog}) ]; then
-   echo "${eeprog} not found which is needed to read out the eeproms." 1>&2
-   echo "${eeprog} can be found at https://github.com/tat/eeprog" 1>&2
-   exit 1
+	echo "${eeprog} not found which is needed to read out the eeproms." 1>&2
+	echo "${eeprog} can be found at https://github.com/tat/eeprog" 1>&2
+	exit 1
 fi
 
 if [ "$(id -u)" != "0" ]; then
-   echo "This script must be run as root, trying sudo" 1>&2
-   sudo $(realpath $0) $@
-   exit 1
+	echo "This script must be run as root, trying sudo" 1>&2
+	sudo $(realpath $0) $@
+	exit 1
 fi
 
 echo "Look for eeproms on ${i2c_dev}. Binries will be stored in ${hats_dir}."
 
 index=0
 while [ "$index" -lt 8 ]; do
-   address=$((0x50 + $index))
-   tmp_file=$(mktemp)
+	if [ "${force}" -eq 0 ] && [ -f "${hats_dir}/eeprom_${index}.bin" ]; then
+		echo "${hats_dir}/eeprom_${index}.bin already present, skip (use --force to overwrite it)"
+		index=$(($index + 1))
+		continue
+	fi
 
-   #${eeprog} -16 -o ${tmp_file} -r 0x00:0x1000 ${i2c_dev} ${address}
-   ${eeprog} -q -f -16 -r 0x00:0x1000 ${i2c_dev} ${address} 2>/dev/null > ${tmp_file}
-   rc=$?
+	address=$((0x50 + $index))
+	tmp_file=$(mktemp)
 
-   if [ "${rc}" -eq 0 ]; then
-      echo "create eeprom file for device with address ${index}"
-      if [ ! -e "${hats_dir}" ]; then
-         mkdir -p "${hats_dir}"
-      fi
-      mv ${tmp_file} "${hats_dir}/eeprom_${index}.bin"
-   fi
+	${eeprog} -q -f -16 -r 0x00:0x1000 ${i2c_dev} ${address} 2>/dev/null > ${tmp_file}
+	rc=$?
 
-   rm -f ${tmp_file}
+	if [ "${rc}" -eq 0 ]; then
+		echo "- create eeprom file for device with address ${index}"
+		if [ ! -e "${hats_dir}" ]; then
+			mkdir -p "${hats_dir}"
+		fi
+		mv ${tmp_file} "${hats_dir}/eeprom_${index}.bin"
+	else
+		echo "- could not read eeprom with address '${address}'" 1>&2
+	fi
 
-   index=$(($index + 1))
+	rm -f ${tmp_file}
+
+	index=$(($index + 1))
 done
 
 echo "Done"
