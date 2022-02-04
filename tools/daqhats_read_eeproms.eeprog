@@ -4,12 +4,17 @@ eeprog="eeprog"
 i2c_dev="$(ls /dev/i2c-* | head -n 1)"
 hats_dir="/etc/mcc/hats"
 
-force=0
+force=${DAQHATS_READ_EEPROMS_FORCE:-0}
 
 while [ $# -ge 1 ]; do
 	case $1 in
 	-h|--help)
-		echo "Usage: daqhats_read_eeproms [I2C-device]"
+		echo "Usage: daqhats_read_eeproms [-f|--force] [I2C-device]"
+		echo ""
+		echo "Options:"
+		echo " -f,--force    Force re-reading of eeproms (env var DAQHATS_READ_EEPROMS_FORCE=1)"
+		echo " -h,--help     Show this help"
+		echo ""
 		echo "Note: This script must be run as root"
 		exit 0
 		;;
@@ -23,6 +28,11 @@ while [ $# -ge 1 ]; do
 		;;
 	esac
 done
+
+if [ -z ${i2c_dev} ] || [ ! -e ${i2c_dev} ]; then
+	echo "No I2C-device available, exit" 1>&2
+	exit 1
+fi
 
 if [ ! $(which ${eeprog}) ]; then
 	echo "${eeprog} not found which is needed to read out the eeproms." 1>&2
