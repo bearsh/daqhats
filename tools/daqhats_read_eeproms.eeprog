@@ -4,16 +4,26 @@ eeprog="eeprog"
 i2c_dev="$(ls /dev/i2c-* | head -n 1)"
 hats_dir="/etc/mcc/hats"
 
+i2c_dev=${DAQHATS_READ_EEPROMS_I2C_DEVICE:-$(ls /dev/i2c-* | head -n 1)}
 force=${DAQHATS_READ_EEPROMS_FORCE:-0}
+nb_devices=${DAQHATS_READ_EEPROMS_NB_DEVICES:-8}
 
 while [ $# -ge 1 ]; do
 	case $1 in
 	-h|--help)
 		echo "Usage: daqhats_read_eeproms [-f|--force] [I2C-device]"
 		echo ""
+		echo "This script scans the I2C bus for daqhats and reads out the eeprom."
+		echo "The content is saved to /etc/mcc/hats/eeprom_IDX.bin where IDX is"
+		echo "a number between 0 and 7 (including). This number also represents"
+		echo "the offset from the base I2C address of 0x50."
+		echo "The I2C-device can also be set using the DAQHATS_READ_EEPROMS_I2C_DEVICE"
+		echo "environment variable. If unset, the first available device is used."
+		echo ""
 		echo "Options:"
-		echo " -f,--force    Force re-reading of eeproms (env var DAQHATS_READ_EEPROMS_FORCE=1)"
-		echo " -h,--help     Show this help"
+		echo " -h,--help        Show this help"
+		echo " -f,--force       Force re-reading of eeproms (env var DAQHATS_READ_EEPROMS_FORCE=1)"
+		echo " -d,--nb-devices  Number of devices to scan for (env var DAQHATS_READ_EEPROMS_NB_DEVICES=nb)"
 		echo ""
 		echo "Note: This script must be run as root"
 		exit 0
@@ -21,6 +31,10 @@ while [ $# -ge 1 ]; do
 	-f|--force)
 		force=1
 		shift
+		;;
+	-d|--nb-devices)
+		nb_devices=$2
+		shift 2
 		;;
 	*)
 		i2c_dev=$1
@@ -49,7 +63,7 @@ fi
 echo "Look for eeproms on ${i2c_dev}. Binries will be stored in ${hats_dir}."
 
 index=0
-while [ "$index" -lt 8 ]; do
+while [ "$index" -lt ${nb_devices} ]; do
 	if [ "${force}" -eq 0 ] && [ -f "${hats_dir}/eeprom_${index}.bin" ]; then
 		echo "${hats_dir}/eeprom_${index}.bin already present, skip (use --force to overwrite it)"
 		index=$(($index + 1))
